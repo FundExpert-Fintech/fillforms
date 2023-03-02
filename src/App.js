@@ -9,13 +9,11 @@ import {btoa} from "buffer";
 
 
 function App() {
-    const [saveSignature, setSaveSignature] = useState(null);
     const [userName, setUserName] = useState("");
     const signaturePad = useRef(null);
 
     const clearSignaturePad = () => {
         signaturePad.current.clear();
-        setSaveSignature(null);
     };
     function Download(arrayBuffer, type) {
         var blob = new Blob([arrayBuffer], { type: type });
@@ -23,27 +21,13 @@ function App() {
         window.open(url);
     }
 
-    function _base64ToArrayBuffer(base64) {
-        var binary_string = window.btoa(base64);
-        var len = binary_string.length;
-        var bytes = new Uint8Array(len);
-        for (var i = 0; i < len; i++) {
-            bytes[i] = binary_string.charCodeAt(i);
-        }
-        return bytes.buffer;
-    }
     const fillForm = async () => {
-        setSaveSignature(_base64ToArrayBuffer(signaturePad.current.toDataURL('image/png')));
         // converting the pdf in base encoded string and loading the document in PDFDocument.load call from pdf-lib
         // const formPdfBytes = await fetch(formUrl).then((res) => res.arrayBuffer());
         // Load a PDF with form fields
 
-
-
-
         const pdfDoc = await PDFDocument.load(baseEncodedString);
-        const pngImage = await pdfDoc.embedPng(saveSignature);
-        console.log('pngImage - - -', pngImage);
+        const pngImage = await pdfDoc.embedPng(signaturePad.current.toDataURL('image/png'));
         const jpgDims = pngImage.scale(0.25);
 
         // Get the form containing all the fields
@@ -51,13 +35,11 @@ function App() {
         const pages = pdfDoc.getPages();
         const firstPage = pages[7];
         firstPage.drawImage(pngImage, {
-            x: firstPage.getWidth() / 1 - jpgDims.width / 1,
-            y: firstPage.getHeight() / 1 - jpgDims.height / 1,
+            x: 390,
+            y: 530,
             width: jpgDims.width,
             height: jpgDims.height,
         });
-
-
 
         // // Get all fields in the PDF by their names
         const dayField = form.getTextField("day");
