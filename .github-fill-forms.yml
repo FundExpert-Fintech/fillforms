@@ -1,0 +1,37 @@
+stages:
+  - build
+  - image_build_and_push
+
+project_build:
+  stage: build
+  image: node:16.0.0-stretch
+  script:
+    - node --version
+    - npm --version
+    - npm ci
+    - npm run build
+  tags:
+    - drunner
+  only:
+    - branches@fill-forms
+    - tags@fill-forms
+  artifacts:
+    paths:
+      - build
+      - nginx.conf
+    expire_in: 3 days
+
+docker_image:
+  stage: image_build_and_push
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login registry_url -u "$CI_REGISTRY_USER" --password-stdin
+  after_script:
+    - docker logout registry_url
+  tags:
+    - drunner
+  script:
+    - docker build -f Dockerfile -t registry_url:$(echo $CI_COMMIT_REF_NAME)-$(echo $CI_COMMIT_SHORT_SHA)-$(echo $CI_PIPELINE_ID) .
+    - docker push  registry_url:$(echo $CI_COMMIT_REF_NAME)-$(echo $CI_COMMIT_SHORT_SHA)-$(echo $CI_PIPELINE_ID)
+  only:
+    - branches@fill-forms
+    - tags@fill-forms
